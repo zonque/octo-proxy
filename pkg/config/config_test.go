@@ -111,14 +111,14 @@ func TestGenerateConfig(t *testing.T) {
 	tests := []struct {
 		Name           string
 		Listener       string
-		Target         string
+		Targets        []string
 		expectedConfig *Config
 		expectedError  string
 	}{
 		{
 			Name:     "Test valid listener and target",
 			Listener: "127.0.0.1:8080",
-			Target:   "127.0.0.1:80",
+			Targets:  []string{"127.0.0.1:80"},
 			expectedConfig: &Config{
 				[]ServerConfig{
 					{
@@ -128,10 +128,12 @@ func TestGenerateConfig(t *testing.T) {
 							Port:    "8080",
 							Timeout: 300,
 						},
-						Target: HostConfig{
-							Host:    "127.0.0.1",
-							Port:    "80",
-							Timeout: 300,
+						Targets: []HostConfig{
+							{
+								Host:    "127.0.0.1",
+								Port:    "80",
+								Timeout: 300,
+							},
 						},
 					},
 				},
@@ -140,50 +142,50 @@ func TestGenerateConfig(t *testing.T) {
 		{
 			Name:           "Test invalid listener",
 			Listener:       ":8080",
-			Target:         "127.0.0.1:80",
+			Targets:        []string{"127.0.0.1:80"},
 			expectedConfig: nil,
 			expectedError:  "host in servers.[0].listener.host not specified",
 		},
 		{
 			Name:           "Test invalid target",
 			Listener:       "127.0.0.1:8080",
-			Target:         ":80",
+			Targets:        []string{":80"},
 			expectedConfig: nil,
 			expectedError:  "host in servers.[0].target.host not specified",
 		},
 		{
 			Name:           "Test invalid port in listener",
 			Listener:       "127.0.0.1:m",
-			Target:         "127.0.0.1:80",
+			Targets:        []string{"127.0.0.1:80"},
 			expectedConfig: nil,
 			expectedError:  "port in servers.[0].listener.port is not valid",
 		},
 		{
 			Name:           "Test no port in listener",
 			Listener:       "127.0.0.1:",
-			Target:         "127.0.0.1:80",
+			Targets:        []string{"127.0.0.1:80"},
 			expectedConfig: nil,
 			expectedError:  "port in servers.[0].listener.port not specified",
 		},
 		{
 			Name:           "Test no port in target",
 			Listener:       "127.0.0.1:8080",
-			Target:         "127.0.0.1",
+			Targets:        []string{"127.0.0.1"},
 			expectedConfig: nil,
-			expectedError:  "listener or target must be specified in format host:port",
+			expectedError:  "target must be specified in format host:port",
 		},
 		{
 			Name:           "Test multiple",
 			Listener:       "127.0.0.1:8080",
-			Target:         "127.0.0.1:80:8080",
+			Targets:        []string{"127.0.0.1:80:8080"},
 			expectedConfig: nil,
-			expectedError:  "listener or target must be specified in format host:port",
+			expectedError:  "target must be specified in format host:port",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.Name, func(t *testing.T) {
-			c, err := GenerateConfig(tt.Listener, tt.Target)
+			c, err := GenerateConfig(tt.Listener, tt.Targets)
 			if err != nil {
 				if !strings.Contains(err.Error(), tt.expectedError) {
 					t.Fatalf("got %v, want %s", err, tt.expectedError)
@@ -215,9 +217,11 @@ func TestReadConfig(t *testing.T) {
 							Host: "127.0.0.1",
 							Port: "8080",
 						},
-						Target: HostConfig{
-							Host: "127.0.0.1",
-							Port: "80",
+						Targets: []HostConfig{
+							{
+								Host: "127.0.0.1",
+								Port: "8080",
+							},
 						},
 					},
 				},
@@ -264,9 +268,11 @@ func TestValidateConfig(t *testing.T) {
 							Host: "127.0.0.1",
 							Port: "8080",
 						},
-						Target: HostConfig{
-							Host: "127.0.0.1",
-							Port: "80",
+						Targets: []HostConfig{
+							{
+								Host: "127.0.0.1",
+								Port: "80",
+							},
 						},
 					},
 				},
@@ -280,10 +286,11 @@ func TestValidateConfig(t *testing.T) {
 							Port:    "8080",
 							Timeout: 300,
 						},
-						Target: HostConfig{
-							Host:    "127.0.0.1",
-							Port:    "80",
-							Timeout: 300,
+						Targets: []HostConfig{
+							{
+								Host: "127.0.0.1",
+								Port: "80",
+							},
 						},
 					},
 				},
@@ -309,9 +316,11 @@ func TestValidateConfig(t *testing.T) {
 				[]ServerConfig{
 					{
 						Name: "proxy-1",
-						Target: HostConfig{
-							Host: "127.0.0.1",
-							Port: "80",
+						Targets: []HostConfig{
+							{
+								Host: "127.0.0.1",
+								Port: "80",
+							},
 						},
 					},
 				},
@@ -344,9 +353,11 @@ func TestValidateConfig(t *testing.T) {
 						Listener: HostConfig{
 							Port: "8080",
 						},
-						Target: HostConfig{
-							Host: "127.0.0.1",
-							Port: "80",
+						Targets: []HostConfig{
+							{
+								Host: "127.0.0.1",
+								Port: "80",
+							},
 						},
 					},
 				},
@@ -364,9 +375,11 @@ func TestValidateConfig(t *testing.T) {
 							Host: "local.local",
 							Port: "8080",
 						},
-						Target: HostConfig{
-							Host: "127.0.0.1",
-							Port: "80",
+						Targets: []HostConfig{
+							{
+								Host: "127.0.0.1",
+								Port: "80",
+							},
 						},
 					},
 				},
@@ -383,9 +396,11 @@ func TestValidateConfig(t *testing.T) {
 						Listener: HostConfig{
 							Host: "127.0.0.1",
 						},
-						Target: HostConfig{
-							Host: "127.0.0.1",
-							Port: "80",
+						Targets: []HostConfig{
+							{
+								Host: "127.0.0.1",
+								Port: "80",
+							},
 						},
 					},
 				},
@@ -403,9 +418,11 @@ func TestValidateConfig(t *testing.T) {
 							Host: "127.0.0.1",
 							Port: "8o",
 						},
-						Target: HostConfig{
-							Host: "127.0.0.1",
-							Port: "80",
+						Targets: []HostConfig{
+							{
+								Host: "127.0.0.1",
+								Port: "80",
+							},
 						},
 					},
 				},
@@ -423,8 +440,10 @@ func TestValidateConfig(t *testing.T) {
 							Host: "127.0.0.1",
 							Port: "8080",
 						},
-						Target: HostConfig{
-							Port: "80",
+						Targets: []HostConfig{
+							{
+								Port: "80",
+							},
 						},
 					},
 				},
@@ -442,9 +461,11 @@ func TestValidateConfig(t *testing.T) {
 							Host: "local.local",
 							Port: "8080",
 						},
-						Target: HostConfig{
-							Host: "127.0.0.1",
-							Port: "80",
+						Targets: []HostConfig{
+							{
+								Host: "127.0.0.1",
+								Port: "80",
+							},
 						},
 					},
 				},
@@ -462,9 +483,11 @@ func TestValidateConfig(t *testing.T) {
 							Host: "127.0.0.1",
 							Port: "8080",
 						},
-						Target: HostConfig{
-							Host: "127.0.0.1",
-							Port: "loc",
+						Targets: []HostConfig{
+							{
+								Host: "127.0.0.1",
+								Port: "80",
+							},
 						},
 					},
 				},
@@ -482,9 +505,11 @@ func TestValidateConfig(t *testing.T) {
 							Host: "127.0.0.1",
 							Port: "8080",
 						},
-						Target: HostConfig{
-							Host: "127.0.0.1",
-							Port: "80",
+						Targets: []HostConfig{
+							{
+								Host: "127.0.0.1",
+								Port: "80",
+							},
 						},
 						Mirror: HostConfig{
 							Port: "2210",
@@ -505,9 +530,11 @@ func TestValidateConfig(t *testing.T) {
 							Host: "127.0.0.1",
 							Port: "8080",
 						},
-						Target: HostConfig{
-							Host: "127.0.0.1",
-							Port: "80",
+						Targets: []HostConfig{
+							{
+								Host: "127.0.0.1",
+								Port: "80",
+							},
 						},
 						Mirror: HostConfig{
 							Host: "192.168.1.1",
@@ -528,9 +555,11 @@ func TestValidateConfig(t *testing.T) {
 							Host: "127.0.0.1",
 							Port: "8080",
 						},
-						Target: HostConfig{
-							Host: "127.0.0.1",
-							Port: "80",
+						Targets: []HostConfig{
+							{
+								Host: "127.0.0.1",
+								Port: "80",
+							},
 						},
 						Mirror: HostConfig{
 							Host: "192.168.1.1",
@@ -553,9 +582,11 @@ func TestValidateConfig(t *testing.T) {
 							Port:    "8080",
 							Timeout: 10,
 						},
-						Target: HostConfig{
-							Host: "127.0.0.1",
-							Port: "80",
+						Targets: []HostConfig{
+							{
+								Host: "127.0.0.1",
+								Port: "80",
+							},
 						},
 					},
 				},
@@ -569,10 +600,12 @@ func TestValidateConfig(t *testing.T) {
 							Port:    "8080",
 							Timeout: 10,
 						},
-						Target: HostConfig{
-							Host:    "127.0.0.1",
-							Port:    "80",
-							Timeout: 300,
+						Targets: []HostConfig{
+							{
+								Host:    "127.0.0.1",
+								Port:    "80",
+								Timeout: 300,
+							},
 						},
 					},
 				},
@@ -589,10 +622,12 @@ func TestValidateConfig(t *testing.T) {
 							Port:    "8080",
 							Timeout: 10,
 						},
-						Target: HostConfig{
-							Host:    "127.0.0.1",
-							Port:    "80",
-							Timeout: 200,
+						Targets: []HostConfig{
+							{
+								Host:    "127.0.0.1",
+								Port:    "80",
+								Timeout: 200,
+							},
 						},
 						Mirror: HostConfig{
 							Host: "127.0.0.1",
@@ -610,10 +645,12 @@ func TestValidateConfig(t *testing.T) {
 							Port:    "8080",
 							Timeout: 10,
 						},
-						Target: HostConfig{
-							Host:    "127.0.0.1",
-							Port:    "80",
-							Timeout: 200,
+						Targets: []HostConfig{
+							{
+								Host:    "127.0.0.1",
+								Port:    "80",
+								Timeout: 200,
+							},
 						},
 						Mirror: HostConfig{
 							Host:    "127.0.0.1",
@@ -640,9 +677,11 @@ func TestValidateConfig(t *testing.T) {
 								Cert:   "/tmp/cert.pem",
 							},
 						},
-						Target: HostConfig{
-							Host: "127.0.0.1",
-							Port: "80",
+						Targets: []HostConfig{
+							{
+								Host: "127.0.0.1",
+								Port: "80",
+							},
 						},
 					},
 				},
@@ -665,10 +704,12 @@ func TestValidateConfig(t *testing.T) {
 								Cert:   "/tmp/cert.pem",
 							},
 						},
-						Target: HostConfig{
-							Host:    "127.0.0.1",
-							Port:    "80",
-							Timeout: 300,
+						Targets: []HostConfig{
+							{
+								Host:    "127.0.0.1",
+								Port:    "80",
+								Timeout: 300,
+							},
 						},
 					},
 				},
@@ -689,9 +730,11 @@ func TestValidateConfig(t *testing.T) {
 								CaCert: "/tmp/ca-cert.pem",
 							},
 						},
-						Target: HostConfig{
-							Host: "127.0.0.1",
-							Port: "80",
+						Targets: []HostConfig{
+							{
+								Host: "127.0.0.1",
+								Port: "80",
+							},
 						},
 					},
 				},
@@ -709,13 +752,15 @@ func TestValidateConfig(t *testing.T) {
 							Host: "127.0.0.1",
 							Port: "8080",
 						},
-						Target: HostConfig{
-							Host: "127.0.0.1",
-							Port: "80",
-							TLSConfig: TLSConfig{
-								Mode:   "mutual",
-								Cert:   "/tmp/cert.pem",
-								CaCert: "/tmp/ca-cert.pem",
+						Targets: []HostConfig{
+							{
+								Host: "127.0.0.1",
+								Port: "80",
+								TLSConfig: TLSConfig{
+									Mode:   "mutual",
+									Cert:   "/tmp/cert.pem",
+									CaCert: "/tmp/ca-cert.pem",
+								},
 							},
 						},
 					},
@@ -734,13 +779,15 @@ func TestValidateConfig(t *testing.T) {
 							Host: "127.0.0.1",
 							Port: "8080",
 						},
-						Target: HostConfig{
-							Host: "127.0.0.1",
-							Port: "80",
-							TLSConfig: TLSConfig{
-								CaCert: "/tmp/ca-cert.pem",
-								Cert:   "/tmp/cert.pem",
-								Key:    "/tmp/key.pem",
+						Targets: []HostConfig{
+							{
+								Host: "127.0.0.1",
+								Port: "80",
+								TLSConfig: TLSConfig{
+									CaCert: "/tmp/ca-cert.pem",
+									Cert:   "/tmp/cert.pem",
+									Key:    "/tmp/key.pem",
+								},
 							},
 						},
 					},
@@ -759,14 +806,16 @@ func TestValidateConfig(t *testing.T) {
 							Host: "127.0.0.1",
 							Port: "8080",
 						},
-						Target: HostConfig{
-							Host: "127.0.0.1",
-							Port: "80",
-							TLSConfig: TLSConfig{
-								CaCert: "/tmp/ca-cert.pem",
-								Cert:   "/tmp/cert.pem",
-								Key:    "/tmp/key.pem",
-								Mode:   "server",
+						Targets: []HostConfig{
+							{
+								Host: "127.0.0.1",
+								Port: "80",
+								TLSConfig: TLSConfig{
+									CaCert: "/tmp/ca-cert.pem",
+									Cert:   "/tmp/cert.pem",
+									Key:    "/tmp/key.pem",
+									Mode:   "server",
+								},
 							},
 						},
 					},
@@ -785,14 +834,16 @@ func TestValidateConfig(t *testing.T) {
 							Host: "127.0.0.1",
 							Port: "8080",
 						},
-						Target: HostConfig{
-							Host: "127.0.0.1",
-							Port: "80",
-							TLSConfig: TLSConfig{
-								CaCert: "/tmp/ca-cert.pem",
-								Cert:   "/tmp/cert.pem",
-								Key:    "/tmp/key.pem",
-								Mode:   "",
+						Targets: []HostConfig{
+							{
+								Host: "127.0.0.1",
+								Port: "80",
+								TLSConfig: TLSConfig{
+									CaCert: "/tmp/ca-cert.pem",
+									Cert:   "/tmp/cert.pem",
+									Key:    "/tmp/key.pem",
+									Mode:   "",
+								},
 							},
 						},
 					},
